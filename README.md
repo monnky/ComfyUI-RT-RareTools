@@ -20,7 +20,9 @@ requirements install
    X:\XXX\ComfyUI_Windows_Portable\ComfyUI\python_embeded\python.exe -m pip install https://github.com/JamePeng/llama-cpp-python/releases/download/xxx_xxx.whl
    
    (wheel from https://github.com/JamePeng/llama-cpp-python/releases/)
-------------------------------------------------------------------------------------------------------------------------------------------------
+
+--------
+LLM Model Links
 
 Gemma Models
 Gemma 4
