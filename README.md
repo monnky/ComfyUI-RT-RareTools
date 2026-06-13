@@ -20,13 +20,16 @@ requirements install
 
    or run Llama-CPP-Python_Windows(No_Deps).bat (easy install for Nvidia GPU)
 
-2) # --- Video I/O ---
+2) --- Video I/O ---
+   
    pip install ImageIO
 
-3) # --- Video I/O ---
+4) --- Video I/O ---
+   
    pip install imageio-ffmpeg
 
-4) # --- Output Sanitization ---
+6) --- Output Sanitization ---
+   
    pip install json-repair
 
 --------
