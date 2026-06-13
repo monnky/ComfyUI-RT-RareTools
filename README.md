@@ -18,9 +18,11 @@ requirements install
    
    (wheel from https://github.com/JamePeng/llama-cpp-python/releases/)
 
-   or run Llama-CPP-Python_Windows(No_Deps).bat (easy install for Nvidia GPU)
+   or run
 
-2) --- Video I/O ---
+   Llama-CPP-Python_Windows(No_Deps).bat (easy install for Nvidia GPU)
+
+3) --- Video I/O ---
    
    pip install ImageIO
 
