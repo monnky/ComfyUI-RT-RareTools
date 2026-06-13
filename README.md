@@ -12,7 +12,8 @@ ComfyUI custom nodes for LTXV2 model, Flux 2 etc.
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
-requirements install
+### $${\color{green}Install : Requirements }$$
+
 
 1) X:\XXX\ComfyUI_Windows_Portable\ComfyUI\python_embeded\python.exe -m pip install https://github.com/JamePeng/llama-cpp-python/releases/download/xxx_xxx.whl
    
