@@ -1,1 +1,6 @@
-llama-cpp-python
+# --- Video I/O ---
+imageio
+imageio-ffmpeg
+
+# --- Output Sanitization ---
+json-repair
