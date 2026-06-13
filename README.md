@@ -8,18 +8,26 @@ Experimental ComfyUI nodes.
 
 Tutorial @ https://www.youtube.com/@raretutor
 
-ComfyUI custom nodes for LTXV2 model.
+ComfyUI custom nodes for LTXV2 model, Flux 2 etc.
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
 requirements install
 
-1) X:\XXX\ComfyUI_Windows_Portable\ComfyUI\python_embeded\python.exe -m pip install llama-cpp-python
-
-   or
-
-   X:\XXX\ComfyUI_Windows_Portable\ComfyUI\python_embeded\python.exe -m pip install https://github.com/JamePeng/llama-cpp-python/releases/download/xxx_xxx.whl
+1) X:\XXX\ComfyUI_Windows_Portable\ComfyUI\python_embeded\python.exe -m pip install https://github.com/JamePeng/llama-cpp-python/releases/download/xxx_xxx.whl
    
    (wheel from https://github.com/JamePeng/llama-cpp-python/releases/)
+
+   or run Llama-CPP-Python_Windows(No_Deps).bat (easy install for Nvidia GPU)
+
+2) # --- Video I/O ---
+   pip install ImageIO
+
+3) # --- Video I/O ---
+   pip install imageio-ffmpeg
+
+4) # --- Output Sanitization ---
+   pip install json-repair
 
 --------
 LLM Model Links
