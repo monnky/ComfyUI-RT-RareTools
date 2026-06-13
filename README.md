@@ -21,7 +21,7 @@ ComfyUI custom nodes for LTXV2 model, Flux 2 etc.
 
    or run
 
-   Llama-CPP-Python_Windows(No_Deps).bat (easy install for Nvidia GPU)
+   Llama-CPP-Python_Windows(No_Deps).bat ### $${\color{yellow} (easy \ install \ for \ Nvidia \ GPU) }$$
 
 3) --- Video I/O ---
    
