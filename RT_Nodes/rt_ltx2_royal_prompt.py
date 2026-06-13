@@ -265,129 +265,192 @@ class RT_LTX2_RoyalPrompt:
 
 
 # ====================================================================================================
-# SECTION 2: OPTION 01 (STRICTLY UNCHANGED ORIGINAL LOGIC + NO HALLUCINATED DIALOGUE)
+# SECTION 2: OPTION 01 — LTX PROMPT ENHANCER
+# Preserves narrator annotations and character dialogue verbatim.
+# Hard rule: NEVER convert narrative prose into narrator annotations.
+# Hard rule: NEVER lose character name attribution from dialogue lines.
 # ====================================================================================================
     def _run_option_01(self, llm_model, user_input, seed, keep_model_loaded, frame_count, base64_image, token_val, temp):
 
-        # ── Pre-extract narrator and dialogue blocks that MUST be preserved verbatim ──
-        # Matches: [Narrator's voice in background says : "text"]
-        #          [Narrator's voice : "text"]
-        #          [Narrator : "text"]  and close variations
+        # ── 1. Pre-extract NARRATOR ANNOTATIONS (bracket format only) ──────────────
+        # Only matches text the user explicitly wrote as [Narrator...] — never prose.
         narrator_pattern = re.compile(
             r'\[Narrator(?:\'s)?\s+(?:voice\s+)?(?:in\s+background\s+)?(?:says?\s*)?[:\-]\s*"[^"]*"\]',
             re.IGNORECASE
         )
         narrator_blocks = narrator_pattern.findall(user_input)
 
-        # Build an explicit preservation checklist to embed in the user message
+        # ── 2. Pre-extract CHARACTER DIALOGUE LINES (Name says/sings/etc. "text") ──
+        # Captures: full line including the character name attribution + quoted speech.
+        dialogue_pattern = re.compile(
+            r'(\b\w+(?:\s+\w+){0,2})\s+'
+            r'(?:says?|said|whispers?|whispered|shouts?|shouted|sings?|sang|'
+            r'speaks?|spoke|replies?|replied|calls?|called|cries?|cried|'
+            r'murmurs?|murmured|announces?|announced|declares?|declared)'
+            r'(?:\s+[a-z]+(?:\s+[a-z]+)?)?\s*[:\-]?\s*"([^"]+)"',
+            re.IGNORECASE
+        )
+        dialogue_matches = dialogue_pattern.findall(user_input)
+        # Reconstruct the full dialogue lines so we can check verbatim presence later
+        dialogue_lines = []
+        for full_match in dialogue_pattern.finditer(user_input):
+            dialogue_lines.append(full_match.group(0).strip())
+
+        # ── 3. Build preservation mandate injected into the user message ─────────
+        preservation_parts = []
         if narrator_blocks:
-            preservation_list = "\n".join(f"  • {b}" for b in narrator_blocks)
-            preservation_notice = (
-                f"\n\nPRESERVATION MANDATE — embed these VERBATIM at their correct position "
-                f"(exact brackets, exact words, exact punctuation):\n{preservation_list}"
+            preservation_parts.append(
+                "NARRATOR ANNOTATIONS — copy each one VERBATIM (exact brackets, exact words, exact punctuation):\n"
+                + "\n".join(f"  • {b}" for b in narrator_blocks)
             )
-        else:
-            preservation_notice = ""
+        if dialogue_lines:
+            preservation_parts.append(
+                "CHARACTER DIALOGUE LINES — reproduce each one VERBATIM, including the character name and verb:\n"
+                + "\n".join(f"  • {d}" for d in dialogue_lines)
+            )
+        preservation_notice = (
+            "\n\nPRESERVATION MANDATE:\n" + "\n\n".join(preservation_parts)
+        ) if preservation_parts else ""
 
-        SYSTEM_PROMPT = """You are an elite video prompt engineer for LTX-2.3. Your task is to ENHANCE the user's request into a rich, cinematic, highly detailed video prompt — while making the MINIMUM necessary changes and preserving every piece of dialogue and narrator annotation EXACTLY as written.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ABSOLUTE PRESERVATION RULES (NEVER VIOLATE)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. NARRATOR ANNOTATIONS: Any text in the format [Narrator's voice in background says : "text"] or [Narrator's voice : "text"] or any [Narrator...] variation MUST be copied into the output VERBATIM — same brackets, same wording, same punctuation — placed at the same logical point in the scene. Do NOT paraphrase, reword, or move them.
-2. CHARACTER DIALOGUE: Any spoken dialogue attributed to a character (e.g. He says "...", She whispers "...", or quoted speech "...") MUST appear in the final prompt word-for-word, unchanged. Do NOT paraphrase or drop any dialogue.
-3. NO INVENTION: If the user provided NO dialogue and NO narrator text, do not add any. Do not invent characters, events, or lines that were not in the original request.
-4. MINIMAL RESTRUCTURING: Enhance AROUND the user's content — layer in visual, cinematic, and sensory detail. Do NOT reorder narrative events or replace the user's chosen words with different ones.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CRITICAL FORMATTING RULES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. STYLE TAG FIRST: The absolute first line MUST be: [Style : <3D Animation OR Live-Action OR 2D Anime>, <texture>, <lighting>].
-2. NO CHATTY FILLER: NEVER start with "Here is the prompt". Start instantly with the [Style : ...] tag.
-3. AMBIENT TAG: The final line MUST be the [AMBIENT: ...] audio tag.
+        # ── 4. System prompt ──────────────────────────────────────────────────────
+        SYSTEM_PROMPT = """You are an elite video prompt engineer for LTX-2.3. Your task is to ENHANCE the user's request into a rich, cinematic, highly detailed video prompt — adding visual, lighting, texture, and micro-movement depth AROUND the existing content, without changing its story core.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-HOW TO ENHANCE FOR LTX-2 (ADD these layers; do NOT replace the user's content)
+RULE 1 — NARRATOR ANNOTATION: STRICT PROHIBITION ON FABRICATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- TEXTURES & MATERIALS: Fabric weave, surface reflectivity, skin details, ground texture, material aging.
-- LIGHTING DETAIL: Light source direction, shadow softness, color temperature, rim lighting, how light catches edges and surfaces.
-- MICRO-MOVEMENTS: Eye blinks, breath rhythm, individual hair strands shifting, fabric draping under gravity, hands trembling.
-- SPATIAL CLARITY: Exact camera framing (close-up / medium / wide), subject distance, depth of field, foreground and background layers.
-- ATMOSPHERE: Ambient haze, dust particles in light, color grading, weather nuances, environmental sounds implied by visuals.
-- WRITE LONG AND VIVID: Each enhancement adds depth; the output should be substantially more detailed than the input while keeping the same story and same words.
+A [Narrator's voice] annotation is a SPECIAL FORMAT MARKER. It ONLY belongs in your output if the user explicitly wrote it in that exact bracket format in their request.
 
-=== PERFECT OUTPUT EXAMPLE (narrator annotation preserved) ===
-[Style : Live-Action, photorealistic skin and worn fabric texture, warm late-afternoon volumetric lighting]
-A medium close-up shot of an elderly man seated at a weathered oak desk, late-afternoon light slanting through dusty venetian blinds and casting amber horizontal bars across his deeply lined face. His worn charcoal wool cardigan catches the warm glow at each fold, individual threads visible at the fraying elbows. His thick-veined hands rest flat on a yellowed letter, trembling almost imperceptibly. [Narrator's voice in background says : "He never sent that letter."] The man's eyes, clouded with age and rimmed with moisture, drift slowly toward the window. A long, deliberate breath makes his chest rise and fall — the only movement in a room that holds its silence like a held breath. Pale dust motes drift through the amber beam of light above him.
-[AMBIENT: faint ticking wall clock, quiet room tone, distant muffled traffic, soft creak of the chair]
-============================================================="""
+FORBIDDEN: Converting regular narrative prose into a narrator annotation.
+  ✗ WRONG — user wrote: "She walks deeper into the tunnel."
+             You wrote: [Narrator's voice in background says : "She walks deeper into the tunnel."]
+  ✓ CORRECT — user wrote: "She walks deeper into the tunnel."
+               You wrote: She moves further into the flower-covered passage, each step deliberate and unhurried.
 
+If the user wrote plain prose, it stays as plain prose. NEVER wrap prose in a [Narrator's voice] bracket.
+If the user DID write a [Narrator's voice...] block, copy it into the output VERBATIM — same brackets, same words, same punctuation, same position in the scene.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE 2 — CHARACTER DIALOGUE: PRESERVE NAME + VERB + QUOTED TEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+When a character dialogue line appears (e.g., Anna says "Since the day you walked away"), reproduce it exactly — character name, verb, and quoted text all intact. Do NOT rewrite it as a descriptive sentence.
+  ✗ WRONG: She sings with deep emotion, her voice carrying the words: "Since the day you walked away"
+  ✓ CORRECT: Anna says "Since the day you walked away / I haven't slept a single night"
+
+You may ADD surrounding description (vocal quality, physical expression, acoustic detail) BEFORE or AFTER the dialogue line — but the dialogue line itself is untouched.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE 3 — CORE STORY: ENHANCE AROUND IT, NOT OVER IT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Do NOT reorder narrative events or change who does what.
+- Do NOT invent new characters, new actions, or new dialogue that the user did not write.
+- Do NOT remove any detail the user included — only ADD to it.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE 4 — FORMATTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Line 1 MUST be: [Style : <3D Animation OR Live-Action OR 2D Anime>, <texture>, <lighting>]
+- Final line MUST be: [AMBIENT: <soundscape>]
+- NEVER start with "Here is the prompt" or any filler. Start with [Style : ...] immediately.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HOW TO ENHANCE (add these; do NOT replace the user's words)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEXTURES & MATERIALS: Fabric weave, surface reflectivity, material aging, ground surface detail.
+LIGHTING: Light source direction, shadow softness, color temperature, rim lighting, how light catches edges.
+MICRO-MOVEMENTS: Eye blinks, breath rhythm, hair strands shifting, fabric draping, hands or fingers in subtle motion.
+SPATIAL CLARITY: Camera framing, depth of field, foreground / midground / background layering.
+ATMOSPHERE: Ambient haze, particle effects, color grading, humidity, scent implied by environment."""
+
+        # ── 5. Pacing rule ────────────────────────────────────────────────────────
         duration_secs = max(1, frame_count // 24)
         if duration_secs <= 6:
             pacing_rule = (
-                f"CRITICAL PACING: The video is short ({duration_secs} seconds). "
-                f"Describe ONLY ONE continuous camera shot. Do NOT use cuts. "
-                f"Instead of fast action, write a LONG, highly descriptive paragraph focusing deeply on MICRO-DETAILS."
+                f"PACING: The video is {duration_secs} seconds — describe ONE continuous shot only. "
+                f"No cuts. Write a LONG, deeply detailed paragraph focused on MICRO-DETAILS."
             )
         else:
             pacing_rule = (
-                f"CRITICAL PACING: The target video is {duration_secs} seconds long. "
-                f"Write a LONG, highly detailed sequence."
+                f"PACING: The video is {duration_secs} seconds — write a LONG, highly detailed sequence."
             )
 
         clean_user_input = user_input.strip()
 
         blueprint = (
             f"{pacing_rule}\n\n"
-            "REQUIRED OUTPUT FORMAT:\n"
-            "Line 1: [Style : <MUST STATE IF 3D ANIMATION, PHOTOREALISTIC, OR 2D ANIME>, <texture, lighting>]\n"
-            "Line 2+: <Your long, vivid, highly detailed scene — ALL narrator annotations and dialogue preserved verbatim>\n"
+            "OUTPUT FORMAT:\n"
+            "Line 1: [Style : <3D ANIMATION / PHOTOREALISTIC / 2D ANIME>, <texture, lighting>]\n"
+            "Lines 2+: Enhanced scene — character dialogue and narrator annotations reproduced verbatim, "
+            "surrounding prose enriched with detail.\n"
             "Final Line: [AMBIENT: <soundscape>]\n\n"
-            "START IMMEDIATELY with the '[Style : ' tag."
+            "START with '[Style : ' immediately."
         )
 
         final_prompt = (
             f"USER REQUEST:\n'{clean_user_input}'\n\n"
-            f"TASK: Enhance this into a highly detailed cinematic LTX-2 prompt. "
-            f"Preserve every narrator annotation and character dialogue VERBATIM — add rich visual, lighting, "
-            f"texture, and micro-movement details around them, but do NOT change or remove them."
+            f"TASK: Enhance this into a highly detailed cinematic LTX-2 video prompt. "
+            f"Add rich visual, lighting, texture, and atmospheric detail. "
+            f"Reproduce all character dialogue and narrator annotations verbatim. "
+            f"Do NOT convert narrative prose into narrator annotations."
             f"{preservation_notice}\n\n"
             f"{blueprint}"
         )
 
+        # ── 6. Model call ─────────────────────────────────────────────────────────
         if base64_image is not None:
-            user_content_block = [{"type": "text", "text": final_prompt}, {"type": "image_url", "image_url": {"url": base64_image}}]
+            user_content_block = [
+                {"type": "text",      "text": final_prompt},
+                {"type": "image_url", "image_url": {"url": base64_image}}
+            ]
         else:
             user_content_block = final_prompt
 
         stop_tokens = ["<end_of_turn>", "<eos>", "<|eot_id|>", "User:", "ASSISTANT:", "Assistant:", "REAL TASK:", "USER REQUEST:"]
         model_lower = llm_model.lower()
-        if "qwen" in model_lower: stop_tokens.extend(["<|im_end|>", "<|im_start|>"])
+        if "qwen" in model_lower:    stop_tokens.extend(["<|im_end|>", "<|im_start|>"])
         elif "gemma" in model_lower: stop_tokens.extend(["<turn|>", "<start_of_turn>"])
 
-        # ── Seed fix: llama.cpp expects uint32 (0 – 4294967295); clamp 64-bit values ──
+        # Seed: clamp to uint32 range — llama.cpp C backend uses uint32_t
         safe_seed = (int(seed) % (2 ** 32)) if seed != -1 else None
 
         try:
             response = self.llm.create_chat_completion(
-                messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_content_block}],
-                max_tokens=token_val, temperature=temp, stop=stop_tokens, logit_bias=self.banned_tokens,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": user_content_block}
+                ],
+                max_tokens=token_val, temperature=temp,
+                stop=stop_tokens, logit_bias=self.banned_tokens,
                 seed=safe_seed
             )
             raw_result = response['choices'][0]['message']['content'].strip()
             final_result = self._clean_output(raw_result)
 
-            # ── Safety net: re-inject any narrator block the LLM silently dropped ──
+            # ── 7. Safety net: re-inject dropped narrator blocks ──────────────────
             for block in narrator_blocks:
                 if block not in final_result:
                     ambient_match = re.search(r'\[AMBIENT:', final_result, re.IGNORECASE)
                     if ambient_match:
                         insert_pos = ambient_match.start()
                         final_result = (
-                            final_result[:insert_pos].rstrip() + "\n" + block + "\n" + final_result[insert_pos:]
+                            final_result[:insert_pos].rstrip() + "\n" + block + "\n"
+                            + final_result[insert_pos:]
                         )
                     else:
                         final_result = final_result.rstrip() + "\n" + block
+
+            # ── 8. Safety net: re-inject dropped dialogue lines ───────────────────
+            for line in dialogue_lines:
+                quoted = re.search(r'"([^"]+)"', line)
+                if quoted and quoted.group(1) not in final_result:
+                    ambient_match = re.search(r'\[AMBIENT:', final_result, re.IGNORECASE)
+                    if ambient_match:
+                        insert_pos = ambient_match.start()
+                        final_result = (
+                            final_result[:insert_pos].rstrip() + "\n" + line + "\n"
+                            + final_result[insert_pos:]
+                        )
+                    else:
+                        final_result = final_result.rstrip() + "\n" + line
 
         except Exception as e:
             final_result = f"Error: {e}"
