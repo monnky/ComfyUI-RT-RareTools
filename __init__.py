@@ -24,4 +24,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     **BASIC_NAMES, # Add this line
 }
 
+# load the custom javascript files from the 'web' folder
+WEB_DIRECTORY = "./web"
+
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
