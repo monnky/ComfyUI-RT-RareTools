@@ -7,33 +7,41 @@ echo =======================================================
 echo.
 
 :: 1. DEFINE ALL PROVIDED LINKS IN A LOOKUP TABLE
-:: Pytorch + CU13
-set "LINK_cp310_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu130-Basic-win-20260417/llama_cpp_python-0.3.36+cu130.basic-cp310-cp310-win_amd64.whl"
-set "LINK_cp311_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu130-Basic-win-20260417/llama_cpp_python-0.3.36+cu130.basic-cp311-cp311-win_amd64.whl"
-set "LINK_cp312_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu130-Basic-win-20260417/llama_cpp_python-0.3.36+cu130.basic-cp312-cp312-win_amd64.whl"
-set "LINK_cp313_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu130-Basic-win-20260417/llama_cpp_python-0.3.36+cu130.basic-cp313-cp313-win_amd64.whl"
-set "LINK_cp314_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu130-Basic-win-20260417/llama_cpp_python-0.3.36+cu130.basic-cp314-cp314-win_amd64.whl"
+
+:: Pytorch + CU13.1
+set "LINK_cp310_cu131=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu131-win-20260608/llama_cpp_python-0.3.40+cu131-cp310-cp310-win_amd64.whl"
+set "LINK_cp311_cu131=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu131-win-20260608/llama_cpp_python-0.3.40+cu131-cp311-cp311-win_amd64.whl"
+set "LINK_cp312_cu131=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu131-win-20260608/llama_cpp_python-0.3.40+cu131-cp312-cp312-win_amd64.whl"
+set "LINK_cp313_cu131=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu131-win-20260608/llama_cpp_python-0.3.40+cu131-cp313-cp313-win_amd64.whl"
+set "LINK_cp314_cu131=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu131-win-20260608/llama_cpp_python-0.3.40+cu131-cp314-cp314-win_amd64.whl"
+
+:: Pytorch + CU13.0
+set "LINK_cp310_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu130-win-20260608/llama_cpp_python-0.3.40+cu130-cp310-cp310-win_amd64.whl"
+set "LINK_cp311_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu130-win-20260608/llama_cpp_python-0.3.40+cu130-cp311-cp311-win_amd64.whl"
+set "LINK_cp312_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu130-win-20260608/llama_cpp_python-0.3.40+cu130-cp312-cp312-win_amd64.whl"
+set "LINK_cp313_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu130-win-20260608/llama_cpp_python-0.3.40+cu130-cp313-cp313-win_amd64.whl"
+set "LINK_cp314_cu130=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu130-win-20260608/llama_cpp_python-0.3.40+cu130-cp314-cp314-win_amd64.whl"
 
 :: Pytorch + CU12.8
-set "LINK_cp310_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu128-Basic-win-20260417/llama_cpp_python-0.3.36+cu128.basic-cp310-cp310-win_amd64.whl"
-set "LINK_cp311_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu128-Basic-win-20260417/llama_cpp_python-0.3.36+cu128.basic-cp311-cp311-win_amd64.whl"
-set "LINK_cp312_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu128-Basic-win-20260417/llama_cpp_python-0.3.36+cu128.basic-cp312-cp312-win_amd64.whl"
-set "LINK_cp313_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu128-Basic-win-20260417/llama_cpp_python-0.3.36+cu128.basic-cp313-cp313-win_amd64.whl"
-set "LINK_cp314_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu128-Basic-win-20260417/llama_cpp_python-0.3.36+cu128.basic-cp314-cp314-win_amd64.whl"
+set "LINK_cp310_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu128-win-20260608/llama_cpp_python-0.3.40+cu128-cp310-cp310-win_amd64.whl"
+set "LINK_cp311_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu128-win-20260608/llama_cpp_python-0.3.40+cu128-cp311-cp311-win_amd64.whl"
+set "LINK_cp312_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu128-win-20260608/llama_cpp_python-0.3.40+cu128-cp312-cp312-win_amd64.whl"
+set "LINK_cp313_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu128-win-20260608/llama_cpp_python-0.3.40+cu128-cp313-cp313-win_amd64.whl"
+set "LINK_cp314_cu128=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu128-win-20260608/llama_cpp_python-0.3.40+cu128-cp314-cp314-win_amd64.whl"
 
 :: Pytorch + CU12.6
-set "LINK_cp310_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu126-Basic-win-20260417/llama_cpp_python-0.3.36+cu126.basic-cp310-cp310-win_amd64.whl"
-set "LINK_cp311_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu126-Basic-win-20260417/llama_cpp_python-0.3.36+cu126.basic-cp311-cp311-win_amd64.whl"
-set "LINK_cp312_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu126-Basic-win-20260417/llama_cpp_python-0.3.36+cu126.basic-cp312-cp312-win_amd64.whl"
-set "LINK_cp313_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu126-Basic-win-20260417/llama_cpp_python-0.3.36+cu126.basic-cp313-cp313-win_amd64.whl"
-set "LINK_cp314_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu126-Basic-win-20260417/llama_cpp_python-0.3.36+cu126.basic-cp314-cp314-win_amd64.whl"
+set "LINK_cp310_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu126-win-20260608/llama_cpp_python-0.3.40+cu126-cp310-cp310-win_amd64.whl"
+set "LINK_cp311_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu126-win-20260608/llama_cpp_python-0.3.40+cu126-cp311-cp311-win_amd64.whl"
+set "LINK_cp312_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu126-win-20260608/llama_cpp_python-0.3.40+cu126-cp312-cp312-win_amd64.whl"
+set "LINK_cp313_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu126-win-20260608/llama_cpp_python-0.3.40+cu126-cp313-cp313-win_amd64.whl"
+set "LINK_cp314_cu126=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu126-win-20260608/llama_cpp_python-0.3.40+cu126-cp314-cp314-win_amd64.whl"
 
 :: Pytorch + CU12.4
-set "LINK_cp310_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu124-Basic-win-20260417/llama_cpp_python-0.3.36+cu124.basic-cp310-cp310-win_amd64.whl"
-set "LINK_cp311_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu124-Basic-win-20260417/llama_cpp_python-0.3.36+cu124.basic-cp311-cp311-win_amd64.whl"
-set "LINK_cp312_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu124-Basic-win-20260417/llama_cpp_python-0.3.36+cu124.basic-cp312-cp312-win_amd64.whl"
-set "LINK_cp313_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu124-Basic-win-20260417/llama_cpp_python-0.3.36+cu124.basic-cp313-cp313-win_amd64.whl"
-set "LINK_cp314_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.36-cu124-Basic-win-20260417/llama_cpp_python-0.3.36+cu124.basic-cp314-cp314-win_amd64.whl"
+set "LINK_cp310_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu124-win-20260608/llama_cpp_python-0.3.40+cu124-cp310-cp310-win_amd64.whl"
+set "LINK_cp311_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu124-win-20260608/llama_cpp_python-0.3.40+cu124-cp311-cp311-win_amd64.whl"
+set "LINK_cp312_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu124-win-20260608/llama_cpp_python-0.3.40+cu124-cp312-cp312-win_amd64.whl"
+set "LINK_cp313_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu124-win-20260608/llama_cpp_python-0.3.40+cu124-cp313-cp313-win_amd64.whl"
+set "LINK_cp314_cu124=https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.40-cu124-win-20260608/llama_cpp_python-0.3.40+cu124-cp314-cp314-win_amd64.whl"
 
 
 :: 2. LOCATE PYTHON
@@ -58,12 +66,12 @@ set "TMP_OUT=%~dp0temp_out.txt"
 
 echo import sys> "%TMP_PY%"
 echo try:>> "%TMP_PY%"
-echo     import torch>> "%TMP_PY%"
-echo     py='cp'+str(sys.version_info.major)+str(sys.version_info.minor)>> "%TMP_PY%"
-echo     c_ver='cu'+torch.version.cuda.replace('.','') if torch.version.cuda else 'cpu'>> "%TMP_PY%"
-echo     print(py+'^|'+c_ver)>> "%TMP_PY%"
+echo      import torch>> "%TMP_PY%"
+echo      py='cp'+str(sys.version_info.major)+str(sys.version_info.minor)>> "%TMP_PY%"
+echo      c_ver='cu'+torch.version.cuda.replace('.','') if torch.version.cuda else 'cpu'>> "%TMP_PY%"
+echo      print(py+'^|'+c_ver)>> "%TMP_PY%"
 echo except Exception as e:>> "%TMP_PY%"
-echo     print('ERROR^|ERROR')>> "%TMP_PY%"
+echo      print('ERROR^|ERROR')>> "%TMP_PY%"
 
 
 :: 4. EXECUTE SCRIPT AND SAVE OUTPUT TO TEXT FILE
@@ -112,7 +120,7 @@ call set "TARGET_WHEEL=%%LINK_%PY_VER%_%CUDA_VER%%%"
 
 if "%TARGET_WHEEL%"=="" (
     echo [ERROR] No pre-built wheel found for Python %PY_VER% with CUDA %CUDA_VER%.
-    echo The available versions are Python 3.10-3.14 with CUDA 12.4, 12.6, 12.8, or 13.0.
+    echo The available versions are Python 3.10-3.14 with CUDA 12.4, 12.6, 12.8, 13.0, or 13.1.
     pause
     exit /b
 )
