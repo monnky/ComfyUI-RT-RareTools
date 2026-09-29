@@ -66,7 +66,6 @@ class RTLTX2StickyNote:
         return {
             "required": {
                 "note_text": ("STRING", {"multiline": True, "default": "Write workflow instructions here..."}),
-                "color_theme": (["Standard", "Urgent (Red)", "Success (Green)", "Info (Blue)"], {"default": "Standard"}),
             },
             "optional": {
                 # Creates the permanent input dot on the left
@@ -79,7 +78,7 @@ class RTLTX2StickyNote:
     CATEGORY = "RareTutor/Utils"
     OUTPUT_NODE = True # Crucial: Tells ComfyUI this is a valid end-point for a workflow!
 
-    def process(self, note_text, color_theme, incoming_text=None):
+    def process(self, note_text, incoming_text=None):
         # Determine which text to use (prioritize incoming wire data if connected)
         if incoming_text is not None and incoming_text.strip() != "":
             final_text = incoming_text
@@ -547,6 +546,66 @@ class RTLTX2FrameReplacer:
 
         return (modified_images,)
 
+# 010: RT-Model Memory Leak Detector #################################################
+import gc
+import sys
+
+class RT_ModelMemoryLeakDetector:
+    """A diagnostic node to detect objects holding references to the MODEL."""
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL",),
+            },
+            "optional": {
+                "trigger_gc": ("BOOLEAN", {"default": True, "label_on": "Yes", "label_off": "No"}),
+            }
+        }
+
+    RETURN_TYPES = ("MODEL",)
+    RETURN_NAMES = ("model",)
+    FUNCTION = "detect_leaks"
+    CATEGORY = "RareTutor/Utils"
+    TITLE = "RT Model Memory Leak Detector"
+
+    def detect_leaks(self, model, trigger_gc=True):
+        print("\n" + "="*60)
+        print("[RT-Diagnostic] 🕵️‍♂️ Model Memory Leak Detector Started")
+        print("="*60)
+        
+        # If the user wants to trigger a full collection first to clear natural cyclic garbage
+        if trigger_gc:
+            print("[RT-Diagnostic] Triggering full garbage collection (gc.collect())...")
+            collected = gc.collect()
+            print(f"[RT-Diagnostic] Garbage collector freed {collected} objects.")
+            
+        ref_count = sys.getrefcount(model)
+        # Note: sys.getrefcount includes the temporary reference passed to getrefcount itself
+        print(f"[RT-Diagnostic] Total Reference Count to MODEL object: {ref_count}")
+        
+        # Get all objects that refer to the model
+        referrers = gc.get_referrers(model)
+        print(f"[RT-Diagnostic] Found {len(referrers)} objects holding a reference to the MODEL.")
+        
+        for i, ref in enumerate(referrers):
+            print(f"\n--- Referrer {i+1} ---")
+            print(f"Type: {type(ref)}")
+            try:
+                # Truncate string representation if it's too long
+                ref_str = str(ref)
+                if len(ref_str) > 500:
+                    ref_str = ref_str[:500] + "... [TRUNCATED]"
+                print(f"Preview:\n{ref_str}")
+            except Exception as e:
+                print(f"Preview: <Could not print object: {e}>")
+                
+        print("\n" + "="*60)
+        print("[RT-Diagnostic] 🏁 Leak Detection Complete")
+        print("="*60 + "\n")
+        
+        return (model,)
+
 # --- Mapping Registration ---
 
 NODE_CLASS_MAPPINGS = {
@@ -559,7 +618,8 @@ NODE_CLASS_MAPPINGS = {
     "RTLTX2TextConcatenatePro": RTLTX2TextConcatenatePro,
     "RTLTX2AudioTrimmer": RTLTX2AudioTrimmer,
     "RT_Flux2MultiRefConditioning": Flux2MultiRefConditioning,
-    "RTLTX2FrameReplacer": RTLTX2FrameReplacer # <-- Updated Name!
+    "RTLTX2FrameReplacer": RTLTX2FrameReplacer,
+    "RT_ModelMemoryLeakDetector": RT_ModelMemoryLeakDetector
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -572,6 +632,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RTLTX2TextConcatenatePro": "RT Flux Prompt Pro 1",
     "RTLTX2AudioTrimmer": "RT Auto Audio Trimmer",
     "RT_Flux2MultiRefConditioning": "RT FLUX2 Multi-Ref Encode",
-    "RTLTX2FrameReplacer": "RT Target Frame Replacer" # <-- Updated Name!
-    
+    "RTLTX2FrameReplacer": "RT Target Frame Replacer",
+    "RT_ModelMemoryLeakDetector": "RT Model Memory Leak Detector"
 }
