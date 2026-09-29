@@ -4,3 +4,8 @@ imageio-ffmpeg
 
 # --- Output Sanitization ---
 json-repair
+
+# --- LLM Acceleration ---
+# Note: llama-cpp-python (v0.4.1) is automatically resolved and installed
+# with the optimal pre-compiled CUDA/Metal wheel for Windows, Linux, or macOS
+# via install.py or Llama-CPP-Python_Windows(No_Deps).bat.
