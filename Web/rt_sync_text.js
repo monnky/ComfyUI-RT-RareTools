@@ -27,6 +27,34 @@ app.registerExtension({
                     }
                 }
             };
+            if (nodeData.name === "RTLTX2StickyNote") {
+                const applyStyle = (node) => {
+                    node.color = "#004322"; // header color
+                    node.bgcolor = "#002211"; // body color
+                    const widget = node.widgets?.find(w => w.name === "note_text");
+                    if (widget && widget.inputEl) {
+                        widget.inputEl.style.setProperty("background-color", "#004322", "important");
+                        widget.inputEl.style.setProperty("color", "#fde624", "important");
+                        widget.inputEl.style.setProperty("font-size", "16px", "important");
+                        widget.inputEl.style.setProperty("font-family", "'Calibri', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif", "important");
+                        widget.inputEl.style.setProperty("font-weight", "bold", "important");
+                    }
+                };
+
+                const onNodeCreated = nodeType.prototype.onNodeCreated;
+                nodeType.prototype.onNodeCreated = function() {
+                    if (onNodeCreated) onNodeCreated.apply(this, arguments);
+                    applyStyle(this);
+                    setTimeout(() => applyStyle(this), 100);
+                };
+
+                const onConfigure = nodeType.prototype.onConfigure;
+                nodeType.prototype.onConfigure = function() {
+                    if (onConfigure) onConfigure.apply(this, arguments);
+                    applyStyle(this);
+                    setTimeout(() => applyStyle(this), 100);
+                };
+            }
         }
     }
 });
