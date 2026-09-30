@@ -257,25 +257,11 @@ class RT_Video_Compare:
         final_fname_b = f"rt_vid_b_{rand_id}.{fmt_b}"
 
         ui_payload = {
-            "video_a": {
-                "filename": final_fname_a,
-                "subfolder": "",
-                "type": "temp",
-                "format": fmt_a,
-                "width": final_w,
-                "height": final_h,
-            },
-            "video_b": {
-                "filename": final_fname_b,
-                "subfolder": "",
-                "type": "temp",
-                "format": fmt_b,
-                "width": final_w,
-                "height": final_h,
-            },
-            "fps": fps,
-            "frame_count": f_aligned,
-            "mode": initial_mode,
+            "video_a": [{"filename": final_fname_a, "subfolder": "", "type": "temp", "format": fmt_a, "width": final_w, "height": final_h}],
+            "video_b": [{"filename": final_fname_b, "subfolder": "", "type": "temp", "format": fmt_b, "width": final_w, "height": final_h}],
+            "fps": [fps],
+            "frame_count": [f_aligned],
+            "mode": [initial_mode],
         }
 
         return {
