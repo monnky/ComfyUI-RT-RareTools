@@ -781,17 +781,22 @@ app.registerExtension({
                 };
             };
 
+            // Helper: ComfyUI wraps all ui values in arrays — unwrap if needed
+            const unwrap = (v) => (Array.isArray(v) ? v[0] : v);
+
             const onExecuted = nodeType.prototype.onExecuted;
             nodeType.prototype.onExecuted = function (message) {
                 if (onExecuted) onExecuted.apply(this, arguments);
                 const data = (message && message.video_a) ? message : (message && message.ui ? message.ui : null);
                 if (data && data.video_a && data.video_b && this.updateVideos) {
-                    this.updateVideos(data.video_a, data.video_b, data.fps, data.mode);
+                    this.updateVideos(unwrap(data.video_a), unwrap(data.video_b), unwrap(data.fps), unwrap(data.mode));
                 }
             };
         }
     },
     async setup(app) {
+        // Helper: ComfyUI wraps all ui values in arrays — unwrap if needed
+        const unwrap = (v) => (Array.isArray(v) ? v[0] : v);
         api.addEventListener("executed", ({ detail }) => {
             if (!detail || !detail.node || !detail.output) return;
             const node = app.graph?.getNodeById(Number(detail.node)) || app.graph?.getNodeById(detail.node);
@@ -799,7 +804,7 @@ app.registerExtension({
                 const out = detail.output;
                 const data = (out && out.video_a) ? out : (out && out.ui ? out.ui : null);
                 if (data && data.video_a && data.video_b && node.updateVideos) {
-                    node.updateVideos(data.video_a, data.video_b, data.fps, data.mode);
+                    node.updateVideos(unwrap(data.video_a), unwrap(data.video_b), unwrap(data.fps), unwrap(data.mode));
                 }
             }
         });
