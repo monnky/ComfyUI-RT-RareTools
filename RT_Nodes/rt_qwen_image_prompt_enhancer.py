@@ -239,6 +239,30 @@ Output:
 - Do not include markdown code fences or explanatory conversational text."""
 
 
+SYSTEM_PROMPT_STYLE_TRANSFER = """# Style Transfer Instruction Generator (Mode 03)
+
+You are given exactly two images:
+- <image1>: The CONTENT image. Its subjects, layout, and composition must be kept.
+- <image2>: The STYLE REFERENCE image. Only its artistic rendering style will be applied.
+
+## Your Task
+
+Generate a concise style transfer instruction using this exact 3-sentence structure:
+
+Sentence 1: "Re-render <image1> completely in 100% of the artistic style, medium, and rendering texture of <image2>."
+Sentence 2: "Every subject, person, clothing, object, and the exact composition from <image1> must remain exactly the same, with strictly consistent facial likeness and identity for all characters from <image1>, but rendered 100% in the artistic style of <image2>."
+Sentence 3: "<image2> is strictly a style reference: absolutely no characters, people, animals, or objects from <image2> must appear in the final image."
+
+## Critical Rules
+
+- Do NOT describe image2's specific colors, textures, brushwork, medium, or visual details.
+- Do NOT guess or name artistic mediums such as 3D render, oil painting, watercolor, anime, vector, illustration.
+- The phrase "completely in 100% of the artistic style, medium, and rendering texture of <image2>" MUST be included in sentence 1.
+- The phrase "absolutely no characters, people, animals, or objects from <image2> must appear in the final image" MUST be included in sentence 3.
+- Keep the total output to exactly 3 sentences, no more, no less.
+- Output ONLY a raw JSON object containing the single key 'rewritten_prompt' with the 3-sentence instruction. No other keys, no preamble, no markdown."""
+
+
 # ====================================================================================================
 # MAIN NODE CLASS: RT_QwenImagePromptEnhancer
 # ====================================================================================================
@@ -295,10 +319,11 @@ class RT_QwenImagePromptEnhancer:
                 }),
                 "mode": ([
                     "01. Edit Prompt Enhancer (Image-to-Image / Multi-Image)",
-                    "02. Text-to-Image Prompt Enhancer (T2I Expansion)"
+                    "02. Text-to-Image Prompt Enhancer (T2I Expansion)",
+                    "03. Style Transfer Prompt Generator (Image-to-Image Style)"
                 ], {
                     "default": "01. Edit Prompt Enhancer (Image-to-Image / Multi-Image)",
-                    "tooltip": "Choose between Image Editing Instruction Rewriter (strict attribute disentanglement) or Text-to-Image Prompt Expansion."
+                    "tooltip": "01: Rewrites image editing instructions with strict attribute disentanglement. 02: Expands short text into rich T2I prompts. 03: Generates a style transfer instruction from image1 (content) + image2 (style reference) - no text input needed."
                 }),
                 "thinking_mode": ([
                     "Disabled (Fast / Direct JSON - Recommended)",
@@ -993,6 +1018,23 @@ class RT_QwenImagePromptEnhancer:
         if not raw_images and image is not None:
             raw_images.append(image)
 
+        # Mode 03: Style Transfer - validate image count and restrict to image_1 and image_2 only
+        if "03." in mode:
+            if len(raw_images) < 2:
+                err_msg = (
+                    "[ERROR] Mode 03 (Style Transfer) requires exactly two images: "
+                    "image_1 as the content image and image_2 as the style reference. "
+                    "Please connect a style reference image to the image_2 input."
+                )
+                print(f"\n[RT-Qwen-Image] {err_msg}\n")
+                return (err_msg, "{}", "", "", err_msg)
+            if len(raw_images) > 2:
+                print(
+                    f"[RT-Qwen-Image] [Mode 03] Warning: Only image_1 and image_2 are used in Style Transfer mode. "
+                    f"{len(raw_images) - 2} additional image(s) connected beyond image_2 will be ignored."
+                )
+            raw_images = raw_images[:2]
+
         # Count total slices across all connected images
         total_image_count = sum([img.shape[0] if img.ndim == 4 else 1 for img in raw_images])
 
@@ -1052,25 +1094,53 @@ class RT_QwenImagePromptEnhancer:
 
         # 2. Select system prompt based on mode and thinking_mode
         is_edit_mode = "01. Edit" in mode
-        system_prompt = SYSTEM_PROMPT_EDIT_ENHANCER if is_edit_mode else SYSTEM_PROMPT_T2I_EXPANSION
+        is_style_mode = "03." in mode
+
+        if is_edit_mode:
+            system_prompt = SYSTEM_PROMPT_EDIT_ENHANCER
+        elif is_style_mode:
+            system_prompt = SYSTEM_PROMPT_STYLE_TRANSFER
+        else:
+            system_prompt = SYSTEM_PROMPT_T2I_EXPANSION
+
         is_direct_mode = "Disabled" in str(thinking_mode) or "Direct" in str(thinking_mode)
 
         if is_direct_mode:
-            system_prompt = re.sub(
-                r"## Thinking Process[\s\S]*?## Image Reference Rules",
-                "## Direct Output Requirement\nCRITICAL: DO NOT emit <think> tags. Do NOT output internal reasoning, analysis, or monologue. Emit ONLY the raw JSON object starting immediately with '{'.\n\n## Image Reference Rules",
-                system_prompt,
-                flags=re.IGNORECASE
-            )
-            system_prompt = system_prompt.replace(
-                "Output ONLY the raw JSON object containing 'rewritten_prompt', 'wh_ratio', and 'ratio_follow'.",
-                "CRITICAL: DO NOT use <think> tags. Output ONLY the raw JSON object starting immediately with '{'."
-            )
+            if is_style_mode:
+                system_prompt += (
+                    "\n\n## Direct Output Requirement\n"
+                    "CRITICAL: DO NOT emit <think> tags. Do NOT output internal reasoning, planning, or thoughts. "
+                    "Begin your response immediately with the exact words 'Re-render <image1>'."
+                )
+            else:
+                system_prompt = re.sub(
+                    r"## Thinking Process[\s\S]*?## Image Reference Rules",
+                    "## Direct Output Requirement\nCRITICAL: DO NOT emit <think> tags. Do NOT output internal reasoning, analysis, or monologue. Emit ONLY the raw JSON object starting immediately with '{'.\n\n## Image Reference Rules",
+                    system_prompt,
+                    flags=re.IGNORECASE
+                )
+                system_prompt = system_prompt.replace(
+                    "Output ONLY the raw JSON object containing 'rewritten_prompt', 'wh_ratio', and 'ratio_follow'.",
+                    "CRITICAL: DO NOT use <think> tags. Output ONLY the raw JSON object starting immediately with '{'."
+                )
 
         # 3. Build user message context
         user_text = user_input.strip() if user_input and user_input.strip() else "Enhance and refine the visual composition."
 
-        if is_edit_mode:
+        if is_style_mode:
+            # Mode 03: no user text needed - images carry all the information
+            if is_direct_mode:
+                annotated_instruction = (
+                    "Task: Output ONLY a valid JSON object starting immediately with '{' and containing the key 'rewritten_prompt' "
+                    "with the exact 3-sentence style transfer instruction. CRITICAL: DO NOT use <think> tags. Start immediately with '{'."
+                )
+            else:
+                annotated_instruction = (
+                    "Task: Generate the style transfer instruction using the exact 3-sentence structure from the system prompt. "
+                    "<image1> is the content image. <image2> is the style reference. "
+                    "Output a JSON object with 'rewritten_prompt'."
+                )
+        elif is_edit_mode:
             if is_direct_mode:
                 format_suffix = (
                     "\n\nTask: Rewrite this edit instruction into a precise directive. "
@@ -1170,8 +1240,63 @@ class RT_QwenImagePromptEnhancer:
         if not keep_model_loaded:
             self.unload_model()
 
-        # 7. Parse bulletproof JSON output
-        enhanced_prompt, json_output_str, wh_ratio, ratio_follow = self._parse_bulletproof_json(raw_result, image_count)
+        # 7. Parse output based on mode
+        if is_style_mode:
+            # Mode 03: extract rewritten_prompt from JSON response, fallback to verified working template
+            clean_result = re.sub(r"<think>[\s\S]*?</think>", "", raw_result, flags=re.IGNORECASE).strip()
+            if "<think>" in clean_result.lower():
+                clean_result = re.sub(r"<think>[\s\S]*$", "", clean_result, flags=re.IGNORECASE).strip()
+
+            extracted = ""
+            try:
+                # 1. Parse JSON candidate
+                json_candidate = clean_result
+                m_fence = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", clean_result, flags=re.IGNORECASE)
+                if m_fence:
+                    json_candidate = m_fence.group(1).strip()
+                elif "{" in clean_result and "}" in clean_result:
+                    s_idx = clean_result.find("{")
+                    e_idx = clean_result.rfind("}")
+                    json_candidate = clean_result[s_idx:e_idx+1].strip()
+
+                maybe_obj = json.loads(json_candidate)
+                if isinstance(maybe_obj, dict):
+                    for k in ["rewritten_prompt", "text", "output", "prompt", "instruction"]:
+                        if k in maybe_obj and isinstance(maybe_obj[k], str) and len(maybe_obj[k].strip()) > 30:
+                            extracted = maybe_obj[k].strip()
+                            break
+            except Exception:
+                pass
+
+            # 2. If not in JSON, check if clean_result has the 3 sentences
+            if not extracted and "Re-render <image1>" in clean_result:
+                extracted = clean_result.strip()
+
+            # 3. Clean fallback: if extraction is empty or invalid, use the exact verified working prompt
+            if not extracted or len(extracted) < 30 or "wait, but the rules" in extracted.lower() or "<think>" in extracted.lower():
+                extracted = (
+                    "Re-render <image1> completely in 100% of the artistic style, medium, and rendering texture of <image2>. "
+                    "Every subject, person, clothing, object, and the exact composition from <image1> must remain exactly the same, "
+                    "with strictly consistent facial likeness and identity for all characters from <image1>, "
+                    "but rendered 100% in the artistic style of <image2>. "
+                    "<image2> is strictly a style reference: absolutely no characters, people, animals, or objects from <image2> must appear in the final image."
+                )
+
+            # Clean formatting
+            extracted = re.sub(r"```[a-z]*\n?", "", extracted).strip()
+            extracted = re.sub(r"```", "", extracted).strip()
+            extracted = re.sub(r"(?:Sentence\s*\d+\s*:\s*|\b\d+\.\s*)", "", extracted).strip()
+            if (extracted.startswith('"') and extracted.endswith('"')) or (extracted.startswith("'") and extracted.endswith("'")):
+                extracted = extracted[1:-1].strip()
+            extracted = re.sub(r"[\r\n]+", " ", extracted).strip()
+            extracted = re.sub(r"\s{2,}", " ", extracted)
+            enhanced_prompt = extracted
+            json_output_str = "{}"
+            wh_ratio = ""
+            ratio_follow = "<image1>"
+        else:
+            # Modes 01 and 02: bulletproof JSON parsing
+            enhanced_prompt, json_output_str, wh_ratio, ratio_follow = self._parse_bulletproof_json(raw_result, image_count)
 
         duration = time.perf_counter() - t_start
 
@@ -1187,10 +1312,20 @@ class RT_QwenImagePromptEnhancer:
             backend_str = f"CPU ONLY (llama-cpp-python lacks CUDA support | PyTorch GPU: {cuda_dev})"
             layers_str = "0 layers (CPU fallback - wheel needs CUDA support)"
 
+        if is_style_mode:
+            mode_diag = "Style Transfer Prompt Generator (Mode 03)"
+            thinking_diag = "Disabled (Fast / Direct Plain Text)" if is_direct_mode else "Enabled (Deep Reasoning)"
+        elif is_edit_mode:
+            mode_diag = "Edit Prompt Enhancer (Image-to-Image)"
+            thinking_diag = "Disabled (Direct Fast JSON)" if is_direct_mode else "Enabled (Deep Reasoning)"
+        else:
+            mode_diag = "Text-to-Image Prompt Enhancer"
+            thinking_diag = "Disabled (Direct Fast JSON)" if is_direct_mode else "Enabled (Deep Reasoning)"
+
         diagnostics = (
             f"=== RT Qwen Image 2.1 Prompt Enhancer Diagnostics ===\n"
-            f"Mode: {'Edit Prompt Enhancer (Image-to-Image)' if is_edit_mode else 'Text-to-Image Prompt Enhancer'}\n"
-            f"Thinking Mode: {'Disabled (Direct Fast JSON)' if is_direct_mode else 'Enabled (Deep Reasoning)'}\n"
+            f"Mode: {mode_diag}\n"
+            f"Thinking Mode: {thinking_diag}\n"
             f"Hardware Backend: {backend_str}\n"
             f"GPU Layers Offloaded: {layers_str}\n"
             f"Images Ingested: {image_count}\n"
@@ -1200,7 +1335,7 @@ class RT_QwenImagePromptEnhancer:
             f"Follow Canvas (ratio_follow): '{ratio_follow}'\n"
             f"Execution Time: {duration:.2f}s\n"
             f"Seed: {safe_seed if safe_seed is not None else 'Random'}\n\n"
-            f"--- Enhanced Single-Line Prompt ---\n{enhanced_prompt}\n\n"
+            f"--- Generated Prompt ---\n{enhanced_prompt}\n\n"
             f"--- Raw Model Response ---\n{raw_result}"
         )
 
