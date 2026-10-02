@@ -1,4 +1,4 @@
-# ComfyUI-RT-LTX2-RareTools
+# ComfyUI-RT-RareTools
 
 Advanced custom nodes suite for ComfyUI featuring **LTX-Video 2 / LTX-2.5**, **Qwen Image 2.1**, **MiniMax H3**, and real-time **Interactive Visual A/B Image and Video Comparison**.
 
