@@ -24,8 +24,8 @@ Open your terminal or command prompt inside your ComfyUI `custom_nodes` director
 
 ```bash
 cd ComfyUI/custom_nodes
-git clone https://github.com/monnky/ComfyUI-RT-LTX2-RareTools.git
-cd ComfyUI-RT-LTX2-RareTools
+git clone https://github.com/monnky/ComfyUI-RT-RareTools.git
+cd ComfyUI-RT-RareTools
 ```
 
 ---
@@ -38,7 +38,7 @@ This node suite utilizes pre-compiled **`llama-cpp-python` (v0.4.1)** wheels wit
 
 ##### Method A: One-Click Installer (Recommended for ComfyUI Portable)
 If you are using the official ComfyUI Windows Portable package:
-1. Navigate to the `ComfyUI/custom_nodes/ComfyUI-RT-LTX2-RareTools` folder.
+1. Navigate to the `ComfyUI/custom_nodes/ComfyUI-RT-RareTools` folder.
 2. Double-click **`Llama-CPP-Python_Windows(No_Deps).bat`**.
    - It automatically locates your `python_embeded` executable.
    - It installs required packages from `requirements.txt`.
