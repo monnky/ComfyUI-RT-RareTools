@@ -606,6 +606,55 @@ class RT_ModelMemoryLeakDetector:
         
         return (model,)
 
+
+# Wildcard type that matches any socket type in ComfyUI graph validation
+class AnyType(str):
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+any_type = AnyType("*")
+
+
+# 011: RT-If Else Node ######################################################
+class RT_IfElse:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "switch": ("BOOLEAN", {"default": False, "label_on": "true", "label_off": "false"}),
+            },
+            "optional": {
+                "on_false": (any_type, {"lazy": True}),
+                "on_true": (any_type, {"lazy": True}),
+            },
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("output",)
+    FUNCTION = "route"
+    CATEGORY = "RareTutor/Utils"
+    TITLE = "RT If Else"
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, **kwargs):
+        # Never block validation if one of the branches is disconnected
+        return True
+
+    def check_lazy_status(self, switch=False, on_false=None, on_true=None, **kwargs):
+        # Lazy execution: only compute the branch selected by the switch
+        if switch:
+            return ["on_true"] if on_true is None else []
+        else:
+            return ["on_false"] if on_false is None else []
+
+    def route(self, switch=False, on_false=None, on_true=None, **kwargs):
+        # Return selected branch, with graceful fallback to the other if available
+        if switch:
+            result = on_true if on_true is not None else on_false
+        else:
+            result = on_false if on_false is not None else on_true
+        return (result,)
+
 # --- Mapping Registration ---
 
 NODE_CLASS_MAPPINGS = {
@@ -619,7 +668,8 @@ NODE_CLASS_MAPPINGS = {
     "RTLTX2AudioTrimmer": RTLTX2AudioTrimmer,
     "RT_Flux2MultiRefConditioning": Flux2MultiRefConditioning,
     "RTLTX2FrameReplacer": RTLTX2FrameReplacer,
-    "RT_ModelMemoryLeakDetector": RT_ModelMemoryLeakDetector
+    "RT_ModelMemoryLeakDetector": RT_ModelMemoryLeakDetector,
+    "RT_IfElse": RT_IfElse
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -633,5 +683,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RTLTX2AudioTrimmer": "RT Auto Audio Trimmer",
     "RT_Flux2MultiRefConditioning": "RT FLUX2 Multi-Ref Encode",
     "RTLTX2FrameReplacer": "RT Target Frame Replacer",
-    "RT_ModelMemoryLeakDetector": "RT Model Memory Leak Detector"
+    "RT_ModelMemoryLeakDetector": "RT Model Memory Leak Detector",
+    "RT_IfElse": "RT If Else"
 }
